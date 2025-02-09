@@ -16,7 +16,8 @@ constexpr int THERMISTOR_PINS[num_thermistors] = {A0, A1, A2, A3, A4};
 const double resistance_ratio = 4.0/14.0;
 float TEMPERATURE_ARRAY[num_thermistors] = {0, 0, 0, 0, 0};
 int COUNTER_ARRAY[num_thermistors] = {0, 0, 0, 0, 0};
-String TEMPERATURE_LABELS[num_thermistors] = {"HEATER", "COOLER", "OUTSIDE", "ELECTRONICS", "INSIDE"};
+String TEMPERATURE_LABELS[num_thermistors] = {"INSIDE", "AMBIENT", "HEATSINKOUTSIDE", "TOTE", "HEATSINKINSIDE"};
+//String TEMPERATURE_LABELS[num_thermistors] = {"HEATER", "COOLER", "OUTSIDE", "ELECTRONICS", "INSIDE"};
 
 // Variables for thermistor calculation
 float thermistor_resistance, resistor_voltage, ln, Tx, thermistor_voltage;
