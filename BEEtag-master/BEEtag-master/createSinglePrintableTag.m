@@ -1,16 +1,16 @@
 %% Example for generating 10 separated high resolution jpegs for single tags
 load masterCodeList.mat
 
-ntags = 100; %How many tags to print?
+ntags = 9; %How many tags to print?
     
 f = figure('Visible', 'Off'); %Tells the figure not to print to the screen, so that resoluiton won't be limited by screen size
 set(f, 'Position', [0 0 4000 4000])
 
-    for i = 1:ntags
+    for i = 0:ntags
         pwd
-        p
-        num = grand(i);
-        
+        %p
+        %num = grand(i);
+        num = i;
         im = createPrintableCode(num, 40);
         
         imshow(im);

@@ -7,7 +7,7 @@ function code = createPrintableCode(num, varargin)
 %    im = createPrintableCode(11, 30);
 %    imshow(im);
 %    
-code = createCode(num);
+code = createCode3(num);
 code = code';
 code = padarray(code,[1 1], 1, 'both');
 code = padarray(code, [1 1],'both');
