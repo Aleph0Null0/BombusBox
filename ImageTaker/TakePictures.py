@@ -11,7 +11,7 @@ if not os.path.exists(os.getcwd() + "/" + SAVE_FOLDER):
 def take_picture(camera):
     ret, frame = camera.read()
     if ret:
-        cv2.imshow('Camera View', frame)
+        #cv2.imshow('Camera View', frame)
         cv2.imwrite(SAVE_FOLDER + "/" + time.strftime("%Y%m%d-%H%M%S") + ".jpg", frame)
         print("Picture taken")
     else:
@@ -22,14 +22,13 @@ def main():
 
     if not camera.isOpened():
         print("Error opening camera")
-    cv2.namedWindow('Camera View')
     while True:
         take_picture(camera)
         if cv2.waitKey(5000) == ord('q'):
             break
 
     camera.release()
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
     return
 
 if __name__ == "__main__":

@@ -17,10 +17,10 @@ for i = 1:numImages
     disp(strcat('tracking frame_', num2str(i), '_of_', num2str(numImages)));
     imagePath = fullfile(imageFolder, imageFiles(i).name);
     im = imread(imagePath);
-    
+    disp(imagePath);
     % Example tracking options:
-    F = locateCodes(im, 'threshMode', 1, 'bradleyFilterSize', [15 15], 'bradleyThreshold', 3);
-    
+    F = locateCodes(im, 'threshMode', 1, 'bradleyFilterSize', [15 15]);
+    disp(F);
     % Append this single frame data to the master tracking output
     trackingData(i).F = F;
 end
@@ -29,8 +29,10 @@ end
 if ~exist('codelist', 'var')
     allNumbers = [];
     for i = 1:numImages
-        curNumbers = [trackingData(i).F.number];
-        allNumbers = [allNumbers curNumbers];
+        if ~isempty(F)
+            curNumbers = [trackingData(i).F.number];
+            allNumbers = [allNumbers curNumbers];
+        end
     end
     codelist = unique(allNumbers);
 end
@@ -59,7 +61,7 @@ save('trackingData.mat', 'trackingDataReshaped')
 %% Replay sequence with tracking data
 TD = trackingDataReshaped;
 outputMovieName = 'ExampleTrackingMovie.avi';
-outputMovie = 0; % Set to 1 if you want to save a movie
+outputMovie = 1; % Set to 1 if you want to save a movie
 
 if outputMovie == 1
     vidObj = VideoWriter(outputMovieName);
@@ -70,13 +72,15 @@ for i = 1:numImages
     im = imread(fullfile(imageFolder, imageFiles(i).name));
     imshow(im);
     hold on;
-    for j = 1:numel(TD)
-        if numel(TD(j).CentroidX) >= i && ~isempty(TD(j).CentroidX(i))
-            try
-                plot([TD(j).CentroidX(i) TD(j).FrontX(i)], [TD(j).CentroidY(i) TD(j).FrontY(i)], 'b-', 'LineWidth', 3);
-                text(TD(j).CentroidX(i), TD(j).CentroidY(i), num2str(TD(j).number(i)), 'FontSize', 25, 'Color', 'r');
-            catch
-                continue;
+    if ~isempty(F) && isfield(F, 'number')
+        for j = 1:numel(TD)
+            if numel(TD(j).CentroidX) >= i && ~isempty(TD(j).CentroidX(i))
+                try
+                    plot([TD(j).CentroidX(i) TD(j).FrontX(i)], [TD(j).CentroidY(i) TD(j).FrontY(i)], 'b-', 'LineWidth', 3);
+                    text(TD(j).CentroidX(i), TD(j).CentroidY(i), num2str(TD(j).number(i)), 'FontSize', 15, 'Color', 'r');
+                catch
+                    continue;
+                end
             end
         end
     end
@@ -89,5 +93,5 @@ for i = 1:numImages
 end
 
 if outputMovie == 1
-    close(vidObj);
+ close(vidObj);
 end

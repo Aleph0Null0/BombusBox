@@ -33,4 +33,4 @@ if __name__ == "__main__":
     # You may need to change the port name
     # Windows: 'COM3', 'COM4', etc.
     # Linux/Mac: '/dev/ttyUSB0', '/dev/ttyACM0', etc.
-    log_serial_data(port='COM4')
+    log_serial_data(port='COM3')

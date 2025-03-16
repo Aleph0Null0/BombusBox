@@ -10,8 +10,10 @@ title('Original image 1');
 
 %Locate codes using the default values
 subplot(2,2,2);
-codes = locateCodes(im)
+codes = locateCodes(im, 'colMode', 1, 'sizeThresh', [25 3000])
+%codes = locateCodes(im)
 title('Tracked image 1');
+%% 
 
 
 %Read in second example file
@@ -23,7 +25,7 @@ title('Original image 2');
 %Locate codes in the image using some manual input values instead of
 %defaults
 subplot(2,2,4);
-codes2 = locateCodes(im2, 'colMode', 1, 'thresh', 0.2)
+codes2 = locateCodes(im2, 'colMode', 1, 'sizeThresh', [25 300000])
 title('Tracked image 2');
 
 %look at 'help locateCodes' to figure out what these 

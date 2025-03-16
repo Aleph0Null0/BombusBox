@@ -96,7 +96,7 @@ end
 tagTh = strcmp('sizeThresh', varargin);
 
 if sum(tagTh) == 0
-    sizeThresh = 100;
+    sizeThresh = 5;
 else
     sizeThresh = cell2mat(varargin(find(tagTh == 1) + 1));
 end
@@ -213,6 +213,7 @@ end
 % extract binary blobs and measure area
 cc = bwconncomp(BW, 8);
 area = cellfun(@numel,cc.PixelIdxList);
+disp(['Detected areas: ', num2str(area)]);
 
 % threshold blobs by area
 below_min = area  < sizeThreshDef(1);
