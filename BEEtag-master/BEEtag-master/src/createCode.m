@@ -15,10 +15,8 @@ bin = dec2bin(num);
 L = numel(bin);
 im = zeros(1, nBit);
 
-for i = 1:L
-    
-im(nBit-L+i) = str2num(bin(i));
-
+for i = 1:L  
+    im(nBit-L+i) = str2num(bin(i));
 end
 
 im = reshape(im,5,3)';
@@ -26,16 +24,10 @@ im = reshape(im,5,3)';
 %checksum
 check = [];
 
-
-
-
 for aa = 1:3   
     check(aa)  = mod(sum(im(aa,:)), 2);
-       
 end
     
-
-
 check(4) =  mod(sum(sum(im(:,1:3))), 2);
 check(5) =  mod(sum(sum(im(:,4:5))), 2);
        

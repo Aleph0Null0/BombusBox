@@ -27,7 +27,6 @@ Servo Atmospheric_Cycle_Servo;
 constexpr int THERMISTOR_PINS[num_thermistors] = {A0, A1, A2, A3, A6};
 float TEMPERATURE_ARRAY[num_thermistors] = {0, 0, 0, 0, 0};
 int COUNTER_ARRAY[num_thermistors] = {0, 0, 0, 0, 0};
-//String TEMPERATURE_LABELS[num_thermistors] = {"INSIDE", "AMBIENT", "HEATSINKOUTSIDE", "TOTE", "HEATSINKINSIDE"};
 String TEMPERATURE_LABELS[num_thermistors] = {"HEATER", "COOLER", "OUTSIDE", "ELECTRONICS", "INSIDE"};
 constexpr float resistance_ratio = 4.0/14.0;
 constexpr float TH = 33.0;

@@ -3,18 +3,15 @@ import time
 from datetime import datetime
 
 
-def log_serial_data(port='COM3', baud_rate=9600, filename=None):
-    # Generate filename with timestamp if none provided
-    if filename is None:
-        filename = f'sensor_data_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+def log_serial_data(port='COM3', baud_rate=9600):
 
-    # Open serial port
+    filename = f'sensor_data_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+
     ser = serial.Serial(port, baud_rate, timeout=1)
     print(f"Connected to {port}")
 
     try:
         with open(filename, 'w') as file:
-            # Read and write data continuously
             while True:
                 if ser.in_waiting:
                     line = ser.readline().decode('utf-8').strip()
@@ -26,7 +23,6 @@ def log_serial_data(port='COM3', baud_rate=9600, filename=None):
         print("\nLogging stopped by user")
     finally:
         ser.close()
-        print(f"Data saved to {filename}")
 
 
 if __name__ == "__main__":

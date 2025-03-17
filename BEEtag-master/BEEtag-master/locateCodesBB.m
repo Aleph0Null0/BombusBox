@@ -198,7 +198,7 @@ end
 cornerSize = 10;
 
 %% Find contiguous white regions
-sizeThreshDef = [50 3000];
+sizeThreshDef = [10 30000];
 
 if numel(sizeThresh) == 1 %If one element is input for sizeThresh, replace minimum
 
@@ -216,7 +216,7 @@ area = cellfun(@numel,cc.PixelIdxList);
 disp(['Detected areas: ', num2str(area)]);
 
 % threshold blobs by area
-below_min = area  < sizeThreshDef(1);
+below_min = area < sizeThreshDef(1);
 above_max = area > sizeThreshDef(2);
 
 % remove blobs with areas out of bounds
@@ -227,7 +227,7 @@ if any(oob)
     cc.NumObjects = cc.NumObjects - sum(oob);
     area(oob) = [];
 else
-    disp('No sufficiently large what regions detected - try changing thresholding values for binary image threshold (thresh) or tag size (sizeThresh)');
+    disp('No sufficiently large white regions detected - try changing thresholding values for binary image threshold (thresh) or tag size (sizeThresh)');
     return
 end
 
@@ -296,9 +296,9 @@ for i=1:numel(R)
         end
     end
     %Set up original coordinates in grid
-    x = [5.5/7 4.5/7 3.5/7 2.5/7 1.5/7];
-    xp = [repmat(x(1), 5, 1) ;repmat(x(2), 5, 1);repmat(x(3), 5, 1);repmat(x(4), 5, 1);repmat(x(5), 5, 1)];
-    P = [xp  repmat(x,1,5)'];
+    x = [1.5/5 2.5/5 3.5/5];
+    xp = [repmat(x(1), 3, 1) ;repmat(x(2), 3, 1);repmat(x(3), 3, 1)];
+    P = [xp  repmat(x,1,3)'];
     f = [ 0 0;  0 1;  1  1;  1 0];
     pts = tforminv(tform,P);
     pts = round(pts);
@@ -313,18 +313,19 @@ for i=1:numel(R)
             ptvals(aa) = BW(cur(1),cur(2));
             %Comment line below in to use median of 9 adjacent pixels
             %instead of single pixel value
-            %ptvals(aa) = median(reshape(BW((cur(1)-1):(cur(1)+1),(cur(2)-1):(cur(2)+1))',1,9));
+            ptvals(aa) = median(reshape(BW((cur(1)-1):(cur(1)+1),(cur(2)-1):(cur(2)+1))',1,9));
         catch
             continue
         end
     end
 
     % Check pixel values for valid codes
-    if numel(ptvals) == 25
+    if numel(ptvals) == 9
         if trackMode == 0
-            code = [ptvals(1:5);ptvals(6:10);ptvals(11:15);ptvals(16:20);ptvals(21:25)];
+            code = [ptvals(1:3);ptvals(4:6);ptvals(7:9)];
+            disp(code)
             code = fliplr(code);
-            [pass code orientation] = checkOrs25(code);
+            [pass code orientation] = checkOrs9(code);
             %number = bin2dec(num2str(code(1:15)));
             R(i).passCode = pass;
             R(i).code = code;
@@ -349,7 +350,7 @@ R = R([R.passCode]==1);
 % Tag orientation
 for i=1:numel(R)
     %%
-    R(i).number = bin2dec(num2str(R(i).code(1:15)));
+    R(i).number = bin2dec(num2str(R(i).code(1:3)));
     %Plot the corners
     corners = R(i).corners;
     cornersP = [corners(2,:) ;corners(1,:)];
@@ -390,6 +391,8 @@ end
 %% Optional code visualization
 
 if vis==1
+    figure;
+    imshow(im);
     for i = 1:numel(R)
         corners = R(i).corners;
         cornersP = [corners(2,:) ;corners(1,:)];

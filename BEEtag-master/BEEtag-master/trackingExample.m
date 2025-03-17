@@ -17,7 +17,7 @@ title('Tracked image 1');
 
 
 %Read in second example file
-im2 = imread('scaleExample2.png');
+im2 = imread('20250316-211405.jpg');
 subplot(2,2,3);
 imshow(im2);
 title('Original image 2');
@@ -25,7 +25,7 @@ title('Original image 2');
 %Locate codes in the image using some manual input values instead of
 %defaults
 subplot(2,2,4);
-codes2 = locateCodes(im2, 'colMode', 1, 'sizeThresh', [25 300000])
+codes2 = locateCodesBB(im2, 'colMode', 1, 'sizeThresh', [25 300000])
 title('Tracked image 2');
 
 %look at 'help locateCodes' to figure out what these 
