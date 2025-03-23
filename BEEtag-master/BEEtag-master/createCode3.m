@@ -19,8 +19,7 @@ function imc = createCode3(num)
     end
     
     disp(im);
-    im = reshape(im,3,1)';
-    disp(im)
+    %im = reshape(im,3,1)';
     %checksum
     check = [];
     

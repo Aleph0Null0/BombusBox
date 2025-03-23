@@ -213,7 +213,7 @@ end
 % extract binary blobs and measure area
 cc = bwconncomp(BW, 8);
 area = cellfun(@numel,cc.PixelIdxList);
-disp(['Detected areas: ', num2str(area)]);
+%disp(['Detected areas: ', num2str(area)]);
 
 % threshold blobs by area
 below_min = area < sizeThreshDef(1);
@@ -325,7 +325,7 @@ for i=1:numel(R)
             code = [ptvals(1:3);ptvals(4:6);ptvals(7:9)];
             disp(code)
             code = fliplr(code);
-            [pass code orientation] = checkOrs9(code);
+            [pass code orientation] = checkOrs9(code)
             %number = bin2dec(num2str(code(1:15)));
             R(i).passCode = pass;
             R(i).code = code;
@@ -396,7 +396,7 @@ if vis==1
     for i = 1:numel(R)
         corners = R(i).corners;
         cornersP = [corners(2,:) ;corners(1,:)];
-        text(R(i).Centroid(1), R(i).Centroid(2), num2str(R(i).number), 'FontSize',30, 'color','r');
+        text(R(i).Centroid(1), R(i).Centroid(2), num2str(R(i).number), 'FontSize',30, 'color','g');
         hold on
         for bb = 1:4
             plot(cornersP(1,bb), cornersP(2,bb),'g.', 'MarkerSize', cornerSize)

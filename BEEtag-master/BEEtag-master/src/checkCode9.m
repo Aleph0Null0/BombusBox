@@ -14,7 +14,7 @@ function [pass] = checkCode9(imc)
     elseif check(3) ~= mod(sum(im(:,3)), 2)
         pass = 0;
 
-    elseif check2 ~= fliplr(check)
+    elseif sum(check2 == fliplr(check)) < 3
         pass = 0;
     end
     %disp(pass);

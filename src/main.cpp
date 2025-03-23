@@ -31,6 +31,7 @@ String TEMPERATURE_LABELS[num_thermistors] = {"HEATER", "COOLER", "OUTSIDE", "EL
 constexpr float resistance_ratio = 4.0/14.0;
 constexpr float TH = 33.0;
 constexpr float TC = 27.0;
+int heating_cooling_intensity = 0;
 
 // Variables for thermistor calculation
 float thermistor_resistance, resistor_voltage, ln, Tx, thermistor_voltage;
@@ -136,9 +137,9 @@ void loop() {
     check_entry_exit(&ENTRY_EXIT[0]);
     //TODO: Implement evaluation of counter array, and adjust signal to heater/cooler accordingly
 
-    int heating_cooling_intensity = deltaTemperature(TEMPERATURE_ARRAY)*counterFunction(COUNTER_ARRAY);
-    if (COUNTER_ARRAY[0] > 0) {start_heating(heating_cooling_intensity);}
-    else if (COUNTER_ARRAY[0] < 0) {start_cooling(heating_cooling_intensity);}
+    heating_cooling_intensity = deltaTemperature(TEMPERATURE_ARRAY)*counterFunction(COUNTER_ARRAY);
+    if (COUNTER_ARRAY[4] > 0) {start_heating(heating_cooling_intensity);}
+    else if (COUNTER_ARRAY[4] < 0) {start_cooling(heating_cooling_intensity);}
 
     if (millis() - last_atmospheric_cycle > atmospheric_cycle_delay) {
         last_atmospheric_cycle = millis();

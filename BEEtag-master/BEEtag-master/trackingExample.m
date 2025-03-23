@@ -2,7 +2,7 @@
 %Remember to add folder with code to your matlab path
 
 %Read in example file
-im = imread('scaleExample.png');
+im = imread('2.jpg');
 figure(1); 
 subplot(2,2,1);
 imshow(im);
@@ -10,14 +10,14 @@ title('Original image 1');
 
 %Locate codes using the default values
 subplot(2,2,2);
-codes = locateCodes(im, 'colMode', 1, 'sizeThresh', [25 3000])
+codes = locateCodesBB(im, 'colMode', 1, 'sizeThresh', [25 3000])
 %codes = locateCodes(im)
 title('Tracked image 1');
 %% 
 
 
 %Read in second example file
-im2 = imread('20250316-211405.jpg');
+im2 = imread('2.jpg');
 subplot(2,2,3);
 imshow(im2);
 title('Original image 2');
