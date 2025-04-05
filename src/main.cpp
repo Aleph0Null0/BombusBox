@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <math.h>
 #include <Servo.h>
+#include <Wire.h>
 //#include <cmath>
 
 // Thermistor parameters from the datasheet
@@ -11,12 +12,13 @@ constexpr int R = 10000;
 constexpr double T0 = 298.15;
 constexpr int num_thermistors = 5;
 constexpr double instr_gain = 1 + (49.4 / 42.2);
+constexpr int8_t i2c_address = 0b0101100;
+constexpr int8_t i2c_instruction = 0b00000000;
 
 //Pin definitions
-#define HEATER_PIN A4
-#define COOLER_PIN A5
-#define HEATER_CONTROLLER D4
-#define COOLER_CONTROLLER D5
+#define LSB_MUX 7
+#define MSB_MUX 8
+#define CONVECTION_FAN 3
 #define ATMOSPHERE_FAN 9
 #define ATMOSPHERE_SERVO 10
 #define ENTRY_DIODE 11
@@ -30,7 +32,7 @@ int COUNTER_ARRAY[num_thermistors] = {0, 0, 0, 0, 0};
 String TEMPERATURE_LABELS[num_thermistors] = {"HEATER", "COOLER", "OUTSIDE", "ELECTRONICS", "INSIDE"};
 constexpr float resistance_ratio = 4.0/14.0;
 constexpr float TH = 33.0;
-constexpr float TC = 27.0;
+float TC = 27.0;
 int heating_cooling_intensity = 0;
 
 // Variables for thermistor calculation
@@ -39,17 +41,22 @@ unsigned long atmospheric_cycle_delay = 1800000; //30 min.
 unsigned int atmospheric_cycle_time = 60; //1 min cycle time
 unsigned long last_atmospheric_cycle = millis();
 bool cycling_atmosphere = false;
+bool overheat_block = false;
+int hour = 0;
 
 //Entry-Exit Tracking
-int ENTRY_EXIT[2] = {0, 0};
+//int ENTRY_EXIT[2] = {0, 0};
 
 void setup() {
     // Setup serial communication
     Serial.begin(9600);
+    Wire.begin(i2c_address);
+    //Wire.beginTransmission(i2c_address);
     Atmospheric_Cycle_Servo.attach(ATMOSPHERE_SERVO);
     pinMode(ATMOSPHERE_SERVO, OUTPUT);
     pinMode(ENTRY_DIODE, INPUT);
     pinMode(EXIT_DIODE, INPUT);
+    analogWrite(CONVECTION_FAN, 255);
 }
 
 float get_temperature(const int thermistor_pin) {
@@ -71,8 +78,9 @@ void update_counter_array(const int array_size) {
         if (TEMPERATURE_ARRAY[i] >= TH) { COUNTER_ARRAY[i]++;}
         else if (TEMPERATURE_ARRAY[i] <= TC) { COUNTER_ARRAY[i]--;}
         else {
-            if (COUNTER_ARRAY[i] > 0) { COUNTER_ARRAY[i]--; }
-            else if (COUNTER_ARRAY[i] < 0) { COUNTER_ARRAY[i]++; }
+            COUNTER_ARRAY[i] = 0;
+            //if (COUNTER_ARRAY[i] > 0) { COUNTER_ARRAY[i]--; }
+            //else if (COUNTER_ARRAY[i] < 0) { COUNTER_ARRAY[i]++; }
         }
     }
 }
@@ -86,69 +94,139 @@ int counterFunction(const int* COUNTER_ARRAY) {
 }
 
 void start_heating(const int output_intensity) {
-    analogWrite(HEATER_PIN, 1);
-    //TODO: Figure out how to define output voltage in I2C System
+    auto heating_message = static_cast<uint8_t>(output_intensity);
+    //heating_message = 0b01100000;
+    digitalWrite(LSB_MUX, LOW);
+    digitalWrite(MSB_MUX, HIGH);
+    //Serial.println("heat");
+    //Serial.println(digitalRead(LSB_MUX));
+    //Serial.println(digitalRead(MSB_MUX));
+    Wire.beginTransmission(i2c_address);  // Start I2C transmission
+    Wire.write(i2c_instruction);
+
+    Wire.write(heating_message);         // Send the heating message
+    byte status = Wire.endTransmission(); // End I2C transmission and check status
+    /*
+    if (status == 0) {
+        Serial.println("I2C transmission successful");
+    } else {
+        Serial.print("I2C transmission failed with status: ");
+        Serial.println(status);
+    }*/
 }
-//TODO: Stop output voltage signal if needed
-void stop_heating() { analogWrite(HEATER_PIN, 0); }
 
 void start_cooling(const int output_intensity) {
-    analogWrite(COOLER_PIN, 1);
-    //TODO: Figure out how to define output voltage in I2C System
+    auto cooling_message = static_cast<uint8_t>(output_intensity);
+    digitalWrite(MSB_MUX, LOW); digitalWrite(LSB_MUX, HIGH);
+    analogWrite(CONVECTION_FAN, output_intensity);
+    Wire.beginTransmission(i2c_address);  // Start I2C transmission
+    Wire.write(i2c_instruction);
+
+    Wire.write(cooling_message);         // Send the cooling message
+    byte status = Wire.endTransmission(); // End I2C transmission and check status
+/*
+    if (status == 0) {
+        Serial.println("I2C transmission successful");
+    } else {
+        Serial.print("I2C transmission failed with status: ");
+        Serial.println(status);
+    }
+    */
 }
-//TODO: Stop output voltage signal if needed
-void stop_cooling() { analogWrite(COOLER_PIN, 0); }
+
+
+void stop_thermals() {
+    digitalWrite(MSB_MUX, 0); digitalWrite(LSB_MUX, 0);
+    digitalWrite(CONVECTION_FAN, 0);
+}
 
 void cycle_atmosphere_toggle(bool* cycling) {
     if (*cycling) {
         *cycling = false;
         Atmospheric_Cycle_Servo.write(0);
-        //TODO: Stop fan
+        digitalWrite(LSB_MUX, 0); digitalWrite(MSB_MUX, 0);
     }
     if (!*cycling) {
         *cycling = true;
         Atmospheric_Cycle_Servo.write(90);
-        //TODO: Start fan
+        digitalWrite(LSB_MUX, 1); digitalWrite(MSB_MUX, 0);
     }
 }
 
 void sendTemperatureSerial() {
     for (int i=0;i<5;i++) {
-        //Serial.print("Temperature ");
         Serial.print(TEMPERATURE_LABELS[i]);
         Serial.print(": ");
         Serial.print(TEMPERATURE_ARRAY[i]);
         Serial.print("C,");
     }
     Serial.println();
+    //Serial.flush();
 }
 
+void updateHour(int* hour, float* cold_threshold_temperature) {
+    if (Serial.available() > 0) {
+        *hour = Serial.readStringUntil('\n').toInt();
+    }
+    if (0 <= *hour and *hour <= 6) {
+        *cold_threshold_temperature = 20.0;
+    }
+    else {
+        *cold_threshold_temperature = 27.0;
+    }
+}
+
+/*
 void check_entry_exit(int* entry_exit_array) {
-    //TODO: Figure out what to read for detection
     bool entry_detected = false;
     bool exit_detected = false;
     if (entry_detected) {entry_exit_array[0]++;}
     if (exit_detected) {entry_exit_array[1]++;}
-}
+}*/
 
 void loop() {
+    analogWrite(CONVECTION_FAN, 255);
+    digitalWrite(7, 0);
     get_temperature_array(num_thermistors, THERMISTOR_PINS);
     update_counter_array(num_thermistors);
-    check_entry_exit(&ENTRY_EXIT[0]);
-    //TODO: Implement evaluation of counter array, and adjust signal to heater/cooler accordingly
+    //check_entry_exit(&ENTRY_EXIT[0]);
+    int thermal_factor = abs(deltaTemperature(TEMPERATURE_ARRAY)*counterFunction(COUNTER_ARRAY));
+    if (thermal_factor > 120) {
+        thermal_factor = 120;
+    }
+    heating_cooling_intensity = map(thermal_factor,
+                                    0, 120, 128, 255);
+    /*
+    Serial.println(thermal_factor);
+    Serial.println(heating_cooling_intensity);
+    Serial.println(counterFunction(COUNTER_ARRAY));
+    Serial.println(deltaTemperature(TEMPERATURE_ARRAY));
+    Serial.println(COUNTER_ARRAY[4]);
+    */
+    if (not cycling_atmosphere and not overheat_block) {
+        if (COUNTER_ARRAY[4] > 0) {start_cooling(255-heating_cooling_intensity); Serial.println("cool");}
+        else if (COUNTER_ARRAY[4] < 0) {start_heating(heating_cooling_intensity);}
+        else if (COUNTER_ARRAY[4] == 0) {stop_thermals();}
 
-    heating_cooling_intensity = deltaTemperature(TEMPERATURE_ARRAY)*counterFunction(COUNTER_ARRAY);
-    if (COUNTER_ARRAY[4] > 0) {start_heating(heating_cooling_intensity);}
-    else if (COUNTER_ARRAY[4] < 0) {start_cooling(heating_cooling_intensity);}
+        if (TEMPERATURE_ARRAY[0] > 60) {
+            overheat_block = true;
+            stop_thermals();
+        }
+    }
+
+    if (overheat_block and TEMPERATURE_ARRAY[0] < 50) {
+        overheat_block = false;
+    }
 
     if (millis() - last_atmospheric_cycle > atmospheric_cycle_delay) {
         last_atmospheric_cycle = millis();
         cycle_atmosphere_toggle(&cycling_atmosphere);
     }
+
     if (cycling_atmosphere and (millis() - last_atmospheric_cycle > atmospheric_cycle_time)) {
         cycle_atmosphere_toggle(&cycling_atmosphere);
     }
-
+    //updateHour(&hour, &TC);
     sendTemperatureSerial();
     delay(500);
 }

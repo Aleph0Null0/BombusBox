@@ -71,7 +71,7 @@ save('trackingData.mat', 'trackingDataReshaped')
 %% Replay sequence with tracking data
 TD = trackingDataReshaped;
 outputMovieName = 'TestSample.avi';
-outputMovie = 1; % Set to 1 if you want to save a movie
+outputMovie = 0; % Set to 1 if you want to save a movie
 if outputMovie == 1
     vidObj = VideoWriter(outputMovieName);
     vidObj.FrameRate = 1;

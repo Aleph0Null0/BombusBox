@@ -29,7 +29,7 @@ def main():
             break
 
     camera.release()
-    #cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
     return
 
 if __name__ == "__main__":
